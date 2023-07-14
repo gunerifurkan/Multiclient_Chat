@@ -1,4 +1,4 @@
 # Multiclient_Chat
-Linux-Based Multithreaded TCP/IP Chat Server in C++.
+Linux-Based Multithreaded TCP/IP Chat Server in C++:
 This program is a demonstration of networking, multithreading, and socket programming concepts in C++, and could serve as a basic framework for a real-time chat application.
 This program is a multithreaded TCP/IP chat server written in C++, designed to run on a Linux-based system. It sets up a server that allows multiple clients (up to a predefined limit) to connect via sockets. Once a connection is established, the server receives incoming messages from any connected client and broadcasts them to all other connected clients. The server handles each client in a separate thread, which allows simultaneous communication between multiple clients. Furthermore, the server is also capable of accepting new connections while handling existing ones. Error handling mechanisms are in place to notify the server of any issues in the socket creation, connection, data reception, and data transmission processes.
