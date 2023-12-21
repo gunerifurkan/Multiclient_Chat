@@ -2,73 +2,67 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <string.h>
 #include <unistd.h>
-#include <clocale>
-#include <sys/types.h>
-#include <netdb.h>
-#include <string>
+#include <string.h>
 #include <thread>
+
+#define PORT 2023
 
 using namespace std;
 
 char buffer[1024];
-string input,userName;
+string input, userName;
 
-void LineGetter(int path)
-{
-    while(1)
-    {
+void LineGetter(int sock) {
+    while (true) {
         getline(cin, input);
         input = userName + ": " + input;
 
-        int output = send(path, input.c_str(), input.size() + 1, 0);
-        if (output == -1)
-        {
-            cout << "Veri Gönderimi Hatası!" << endl;
+        int sendRes = send(sock, input.c_str(), input.size() + 1, 0);
+        if (sendRes == -1) {
+            cout << "Could not send to server! Whoops!" << endl;
+            continue;
         }
     }
 }
 
-int main()
-{
-    setlocale(LC_ALL, "Turkish");
+void startClient() {
+    int sock = 0;
+    struct sockaddr_in serv_addr;
 
-    struct sockaddr_in server;
-    server.sin_family = AF_INET;
-    server.sin_port = htons(2023);
-    inet_pton(AF_INET, "127.0.0.1", &server.sin_addr);
-
-    int path = socket(AF_INET, SOCK_STREAM, 0); // IPv4, TCP
-
-    if(connect (path, (struct sockaddr*) &server, sizeof(server)) < 0) // 0 = CORRECT
-    {
-        cout << "Sunucu Bağlantısı Hatası!" << endl;
-        return 1;
-    }
-    else
-    {
-        cout << "Sunucu Bağlantısı Başarılı... \n\n";
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\\n Socket creation error \\n");
+        return;
     }
 
-    cout << "Kullanıcı Adı: ";
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        cout << "\\nInvalid address/ Address not supported \\n";
+        return;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        cout << "\\nConnection Failed \\n";
+        return;
+    }
+
+    cout << "Enter your name: ";
     getline(cin, userName);
 
-    thread th1(LineGetter, path);
+    thread senderThread(LineGetter, sock);
 
-    do
-    {
-        int d_size = recv(path, buffer, 1024, 0);
-        if (d_size == -1)
-        {
-            cout << "Yanıt Hatası!" << endl;
+    while (true) {
+        memset(buffer, 0, 1024);
+        int read = recv(sock, buffer, 1024, 0);
+        if (read > 0) {
+            cout << buffer << endl;
         }
+    }
+}
 
-        if(d_size > 0)
-        {
-            cout << string(buffer, 0, d_size) << endl;
-        }
-    } while(1);
-
+int main() {
+    startClient();
     return 0;
 }
