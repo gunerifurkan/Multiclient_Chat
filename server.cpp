@@ -13,24 +13,25 @@
 
 using namespace std;
 
-map<int, pair<string, thread>> clientThreads;
+map<int, pair<string, thread>> clientThreads; // Client Socket, Name, and Thread
 
 void handleClient(int clientSocket) {
     char buffer[1024];
 
     while (true) {
-        memset(buffer, 0, 1024);
+        memset(buffer, 0, 1024); // Clear buffer at the start of each loop
         int read = recv(clientSocket, buffer, 1024, 0);
 
         if (read <= 0) {
             cout << "Client disconnected or error" << endl;
             close(clientSocket);
-            clientThreads.erase(clientSocket);
+            clientThreads.erase(clientSocket); // Remove the client thread from the map
             break;
         }
 
+        // Forward the message to all clients except the sender
         for (auto const& pair : clientThreads) {
-            if (pair.first != clientSocket) {
+            if (pair.first != clientSocket) { // Check if the client is not the sender
                 send(pair.first, buffer, strlen(buffer), 0);
             }
         }
@@ -70,11 +71,12 @@ void startServer() {
     while (true) {
         if ((newSocket = accept(serverFd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
             perror("accept");
-            continue;
+            continue; // Continue accepting other connections even if one fails
         }
 
         cout << "New connection: " << newSocket << endl;
 
+        // Create a new thread for each connected client
         clientThreads[newSocket] = make_pair("", thread(handleClient, newSocket));
     }
 }
